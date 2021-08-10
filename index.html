@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget</title>
+
+    <link href="/styles.css" rel="stylesheet">
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body>
+    <div class="m-auto py-10 w-4/5" x-data="init()">
+        <h1 class="font-extrabold text-4xl">Budget</h1>
+
+        <div class="mt-16 text-3xl text-blue-700" x-text="getBudget()"></div>
+
+        <div class="flex mt-16">
+            <input class="rounded" type="number" min="0" step="0.01" x-on:blur="add($el)" autofocus>
+
+            <button class="border border-green-800 bg-green-800 ml-5 p-2 rounded text-white"
+                    type="button">
+                Add
+            </button>
+
+            <button class="border border-red-800 ml-2 p-2 rounded text-red-800"
+                    type="button"
+                    x-on:click="reset()">
+                    Reset
+            </button>
+        </div>
+
+        <template x-if="history.length">
+            <table class="mt-20">
+                <tbody>
+                    <template x-for="item in history">
+                        <tr>
+                            <td x-text="getBudget(item.budget)"></td>
+                            <td class="pl-10" x-text="getDate(item.date)"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
+
+        <template x-if="history.length">
+            <button class="bg-red-700 mt-4 p-2 rounded text-white w-20"
+                    type="button"
+                    x-on:click="clear()">
+                Clear
+            </button>
+        </template>
+    </div>
+
+    <script>
+        function init() {
+            return {
+                budget: window.localStorage.getItem('budget') || 0,
+                history: JSON.parse(window.localStorage.getItem('history')) || [],
+
+                add: function (element) {
+                    const value = element.value
+                    this.budget = parseFloat(this.budget) + parseFloat(value === '' ? 0 : value)
+                    window.localStorage.setItem('budget', this.budget)
+                    element.value = ''
+                    element.focus()
+                },
+
+                reset: function () {
+                    this.history.push({ budget: this.budget, date: Date.now() })
+                    window.localStorage.setItem('history', JSON.stringify(this.history))
+                    this.budget = 0
+                    window.localStorage.setItem('budget', this.budget)
+                },
+
+                clear: function () {
+                    window.localStorage.removeItem('budget')
+                    window.localStorage.removeItem('history')
+                    window.location.reload()
+                },
+
+                getBudget: function (budget = this.budget) {
+                    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
+                        .format(budget)
+                },
+
+                getDate: function (date) {
+                    return new Intl.DateTimeFormat('de-DE', {
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        timeZone: 'Europe/Berlin'
+                      })
+                        .format(date)
+                }
+            }
+        }
+    </script>
+</body>
+</html>

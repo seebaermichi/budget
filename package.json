@@ -1,0 +1,10 @@
+{
+  "name": "budget",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.3.3",
+    "tailwindcss": "^2.2.7"
+  }
+}
