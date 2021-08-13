@@ -129,7 +129,7 @@
                 },
 
                 reset: function () {
-                    this.history.push({ budget: this.budget, date: Date.now() })
+                    this.history.push({ budget: this.budget, avarage: this.getAvarage(), date: Date.now() })
                     storeLocal('history', this.history)
                     this.budget = 0
                     this.book = []
