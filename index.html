@@ -9,36 +9,68 @@
     <link rel="shortcut icon" type="image/jpg" href="favicon.ico"/>
     <link rel="apple-touch-icon" href="favicon.png">
     <link href="/styles.css" rel="stylesheet">
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+    </style>
+
     <script src="//unpkg.com/alpinejs" defer></script>
 </head>
-<body>
-    <div class="m-auto py-10 w-4/5" x-data="init()">
-        <h1 class="font-extrabold text-4xl">Budget</h1>
+<body class="py-5 h-sm:py-10">
+    <div class="flex flex-col h-full m-auto px-6 w-full" x-data="init()">
+        <h1 class="text-xl h-sm:text-2xl text-gray-700">Budget</h1>
 
-        <div class="mt-16 text-3xl text-blue-700" x-text="getBudget()"></div>
+        <div class="flex items-end mt-4 h-sm:mt-5">
+            <span class="font-medium text-blue-700 text-4xl h-sm:text-5xl" x-text="getBudget()"></span>
 
-        <div class="flex mt-16">
-            <input class="rounded" type="number" min="0" step="0.01" x-on:blur="add($el)" autofocus>
+            <span class="flex-1 pl-5 text-blue-500 text-lg text-right" x-html="'&Oslash; ' + getBudget(getAvarage())"></span>
+        </div>
 
-            <button class="border border-green-800 bg-green-800 ml-5 p-2 rounded text-white"
-                    type="button">
-                Add
-            </button>
+        <template x-if="book.length > 0">
+            <table class="mt-5">
+                <tbody class="">
+                    <template x-for="(item, index) in book">
+                        <tr class="leading-7" x-bind:class="index % 2 === 0 ? 'bg-blue-50' : ''">
+                            <td class="pl-2" x-text="getBudget(item.budget)"></td>
+                            <td class="pr-2" x-text="item.note"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
 
-            <button class="border border-red-800 ml-2 p-2 rounded text-red-800"
-                    type="button"
-                    x-on:click="reset()">
-                    Reset
-            </button>
+        <div class="mt-auto">
+            <div class="flex mt-8 space-x-5">
+                <input class="py-3 rounded w-3/12" type="number" min="0" step="0.01" x-ref="budget" placeholder="Budget" autofocus>
+
+                <input class="py-3 rounded w-9/12" type="text" x-ref="note" placeholder="Note">
+            </div>
+
+            <div class="flex mt-5 space-x-5">
+                <button class="border border-green-800 bg-green-800 p-2 rounded text-white w-6/12"
+                        x-on:click="add()"
+                        type="button">
+                    Add
+                </button>
+
+                <button class="border border-red-800 p-2 rounded text-red-800 w-6/12"
+                        type="button"
+                        x-on:click="reset()">
+                        Reset
+                </button>
+            </div>
         </div>
 
         <template x-if="history.length">
-            <table class="mt-20">
+            <table class="mt-4">
                 <tbody>
-                    <template x-for="item in history">
-                        <tr>
-                            <td x-text="getBudget(item.budget)"></td>
-                            <td class="pl-10" x-text="getDate(item.date)"></td>
+                    <template x-for="(item, index) in history">
+                        <tr class="leading-5" x-bind:class="index % 2 === 0 ? 'bg-gray-50' : ''">
+                            <td class="pl-2" x-text="getBudget(item.budget)"></td>
+                            <td class="pr-2" x-text="getDate(item.date)"></td>
                         </tr>
                     </template>
                 </tbody>
@@ -46,7 +78,7 @@
         </template>
 
         <template x-if="history.length">
-            <button class="bg-red-700 mt-4 p-2 rounded text-white w-20"
+            <button class="bg-red-700 mt-2 p-2 rounded text-white w-20"
                     type="button"
                     x-on:click="clear()">
                 Clear
@@ -55,29 +87,61 @@
     </div>
 
     <script>
+        function getLocal(key) {
+            return JSON.parse(window.localStorage.getItem(key))
+        }
+
+        function storeLocal(key, value) {
+            window.localStorage.setItem(key, JSON.stringify(value))
+        }
+
+        function deleteLocal(key) {
+            window.localStorage.removeItem(key)
+        }
+
         function init() {
             return {
-                budget: window.localStorage.getItem('budget') || 0,
-                history: JSON.parse(window.localStorage.getItem('history')) || [],
+                budget: getLocal('budget') || 0,
+                book: getLocal('book') || [],
+                history: getLocal('history') || [],
 
-                add: function (element) {
-                    const value = element.value
+                add: function (element = this.$refs.budget) {
+                    const budgetInput = this.$refs.budget
+                    const noteInput = this.$refs.note
+
+                    if (budgetInput.value !== '' && budgetInput.value > 0) {
+                        this.addBudget(budgetInput.value)
+                        this.addBook(budgetInput.value, noteInput.value.trim())
+                    }
+
+                    budgetInput.value = noteInput.value = ''
+                    budgetInput.focus()
+                },
+
+                addBudget: function (value) {
                     this.budget = parseFloat(this.budget) + parseFloat(value === '' ? 0 : value)
-                    window.localStorage.setItem('budget', this.budget)
-                    element.value = ''
-                    element.focus()
+                    storeLocal('budget', this.budget)
+                },
+
+                addBook: function(budget, note) {
+                    this.book.push({ budget, note })
+                    storeLocal('book', this.book)
                 },
 
                 reset: function () {
                     this.history.push({ budget: this.budget, date: Date.now() })
-                    window.localStorage.setItem('history', JSON.stringify(this.history))
+                    storeLocal('history', this.history)
                     this.budget = 0
-                    window.localStorage.setItem('budget', this.budget)
+                    this.book = []
+                    storeLocal('budget', this.budget)
+                    storeLocal('book', this.book)
                 },
 
                 clear: function () {
-                    window.localStorage.removeItem('budget')
-                    window.localStorage.removeItem('history')
+                    deleteLocal('budget')
+                    deleteLocal('data')
+                    deleteLocal('history')
+
                     window.location.reload()
                 },
 
@@ -86,13 +150,17 @@
                         .format(budget)
                 },
 
+                getAvarage: function () {
+                    return this.budget / 7
+                },
+
                 getDate: function (date) {
                     return new Intl.DateTimeFormat('de-DE', {
                         year: 'numeric', month: '2-digit', day: '2-digit',
                         timeZone: 'Europe/Berlin'
                       })
                         .format(date)
-                }
+                },
             }
         }
     </script>

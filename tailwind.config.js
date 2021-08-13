@@ -3,10 +3,13 @@ module.exports = {
   mode: 'jit',
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    extend: {
+        screens: {
+            'h-sm': {'raw': '(min-height: 660px)'}
+        }
+    },
   },
   variants: {
-    extend: {},
   },
   plugins: [
     require('@tailwindcss/forms')
